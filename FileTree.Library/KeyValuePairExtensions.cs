@@ -2,7 +2,7 @@
 
 namespace FileTree.Library
 {
-    static class KeyValuePairExtensions
+    internal static class KeyValuePairExtensions
     {
         public static void Deconstruct<TK, TV>(this KeyValuePair<TK, TV> pair,
             out TK key,

@@ -1,15 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+using System;
 using System.Collections.ObjectModel;
 using System.IO;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace FileTree.Library
 {
     public class FileSystemNode
     {
-        public bool IsExistsUnauthorizedAccessChildren { get; }
-
         public FileSystemNode(object info,
             bool isExistsUnauthorizedAccessChildren,
             FileSystemTree? tree = null,
@@ -36,9 +35,7 @@ namespace FileTree.Library
             Hierarchy = hierarchy;
             Index = index;
         }
-
         public ReadOnlyCollection<FileSystemNode>? Children => Tree?.GetChildren(this);
-
         public string FullName =>
             Info switch
             {
@@ -46,13 +43,11 @@ namespace FileTree.Library
                 DirectoryInfo directoryInfo => directoryInfo.FullName,
                 _ => throw new ArgumentOutOfRangeException()
             };
-
         public int Hierarchy { get; }
         public int Index { get; }
-
         [JsonIgnore]
         public object Info { get; }
-
+        public bool IsExistsUnauthorizedAccessChildren { get; }
         public string Name =>
             Info switch
             {

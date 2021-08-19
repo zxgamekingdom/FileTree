@@ -8,18 +8,6 @@ namespace FileTree.Library
     {
         private class Node
         {
-            public FileSystemNode GetFileNode(FileSystemTree systemTree)
-            {
-                return new FileSystemNode(Info,
-                    IsExistsUnauthorizedAccessChildren,
-                    systemTree,
-                    Parent?.GetFileNode(systemTree),
-                    Hierarchy,
-                    Index);
-            }
-
-            public bool IsExistsUnauthorizedAccessChildren { get; set; }
-
             public Node(object info, Node? parent = default, int hierarchy = 0)
             {
                 if (hierarchy < 0)
@@ -35,9 +23,7 @@ namespace FileTree.Library
                 Parent = parent;
                 Hierarchy = hierarchy;
             }
-
             public List<Node> Children { get; } = new();
-
             public string FullName =>
                 Info switch
                 {
@@ -45,10 +31,10 @@ namespace FileTree.Library
                     DirectoryInfo directoryInfo => directoryInfo.FullName,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
             public int Hierarchy { get; }
+            public int Index { get; set; }
             public object Info { get; }
-
+            public bool IsExistsUnauthorizedAccessChildren { get; set; }
             public string Name =>
                 Info switch
                 {
@@ -56,9 +42,7 @@ namespace FileTree.Library
                     DirectoryInfo directoryInfo => directoryInfo.Name,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
             public Node? Parent { get; }
-
             public FileSystemNodeType Type =>
                 Info switch
                 {
@@ -66,8 +50,15 @@ namespace FileTree.Library
                     FileInfo => FileSystemNodeType.FileInfo,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-
-            public int Index { get; set; }
+            public FileSystemNode GetFileNode(FileSystemTree systemTree)
+            {
+                return new FileSystemNode(Info,
+                    IsExistsUnauthorizedAccessChildren,
+                    systemTree,
+                    Parent?.GetFileNode(systemTree),
+                    Hierarchy,
+                    Index);
+            }
         }
     }
 }

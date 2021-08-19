@@ -1,25 +1,22 @@
-﻿using System;
+﻿using FileTree.Library;
+
+using System;
 using System.IO;
-using FileTree.Library;
 
 namespace Test
 {
-    static class Program
-    {
-        static void Main(string[] args)
-        {
-            var fileSystemTree =
-                new FileSystemTree(
-                    new DirectoryInfo($@"C:\Users\Taurus Zhou\Documents\BRAING8"));
-            fileSystemTree.ToString().WriteLine();
-            Console.ReadKey();
-        }
-    }
-
     public static class ConsoleExtensions
     {
-        public static void WriteLine<T>(this T t,
+        public static void ConsoleSplitLine(char splitLineChar = '_',
             ConsoleColor foregroundColor = ConsoleColor.Gray,
+            ConsoleColor backgroundColor = ConsoleColor.Black)
+        {
+            int width = Console.WindowWidth;
+            new string(splitLineChar, width - 1).WriteLine(foregroundColor,
+                backgroundColor);
+        }
+        public static void WriteLine<T>(this T t,
+                   ConsoleColor foregroundColor = ConsoleColor.Gray,
             ConsoleColor backgroundColor = ConsoleColor.Black)
         {
             lock (Console.Out)
@@ -33,14 +30,16 @@ namespace Test
                 Console.ForegroundColor = foregroundBuff;
             }
         }
-
-        public static void ConsoleSplitLine(char splitLineChar = '_',
-            ConsoleColor foregroundColor = ConsoleColor.Gray,
-            ConsoleColor backgroundColor = ConsoleColor.Black)
+    }
+    internal static class Program
+    {
+        private static void Main(string[] args)
         {
-            int width = Console.WindowWidth;
-            new string(splitLineChar, width - 1).WriteLine(foregroundColor,
-                backgroundColor);
+            var fileSystemTree =
+                new FileSystemTree(
+                    new DirectoryInfo($@"C:\Users\Taurus Zhou\Documents\BRAING8"));
+            fileSystemTree.ToString().WriteLine();
+            Console.ReadKey();
         }
     }
 }
