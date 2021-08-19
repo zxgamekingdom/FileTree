@@ -1,44 +1,30 @@
 ﻿using FileTree.Library;
-
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.IO;
+using System.Linq;
 
 namespace Test
 {
-    public static class ConsoleExtensions
-    {
-        public static void ConsoleSplitLine(char splitLineChar = '_',
-            ConsoleColor foregroundColor = ConsoleColor.Gray,
-            ConsoleColor backgroundColor = ConsoleColor.Black)
-        {
-            int width = Console.WindowWidth;
-            new string(splitLineChar, width - 1).WriteLine(foregroundColor,
-                backgroundColor);
-        }
-        public static void WriteLine<T>(this T t,
-                   ConsoleColor foregroundColor = ConsoleColor.Gray,
-            ConsoleColor backgroundColor = ConsoleColor.Black)
-        {
-            lock (Console.Out)
-            {
-                ConsoleColor backgroundBuff = Console.BackgroundColor;
-                ConsoleColor foregroundBuff = Console.ForegroundColor;
-                Console.BackgroundColor = backgroundColor;
-                Console.ForegroundColor = foregroundColor;
-                Console.WriteLine(t);
-                Console.BackgroundColor = backgroundBuff;
-                Console.ForegroundColor = foregroundBuff;
-            }
-        }
-    }
     internal static class Program
     {
         private static void Main(string[] args)
         {
-            var fileSystemTree =
-                new FileSystemTree(
-                    new DirectoryInfo($@"C:\Users\Taurus Zhou\Documents\BRAING8"));
-            fileSystemTree.ToString().WriteLine();
+            var tree = new FileSystemTree(
+                new DirectoryInfo(
+                    $@"C:\Users\Taurus Zhou\.nuget\packages\fody\6.5.1\build"));
+            FileSystemNode single = tree.All.Single(node =>
+                node.Name is "Fody.targets");
+            tree[0, 0].Name.WriteLine();
+            single.WriteLine();
+            List<FileSystemNode> fileSystemNodes = single.GetAllParent();
+            if (fileSystemNodes != null)
+                foreach (FileSystemNode node in fileSystemNodes)
+                {
+                    node.Name.WriteLine();
+                }
+
             Console.ReadKey();
         }
     }

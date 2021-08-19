@@ -20,6 +20,9 @@ namespace FileTree.Library
             UpdateNodeIndex(token);
         }
 
+        /// <summary>
+        /// 文件树中的所有节点
+        /// </summary>
         public ReadOnlyCollection<FileSystemNode> All
         {
             get
@@ -40,6 +43,10 @@ namespace FileTree.Library
         }
 
         public DirectoryInfo BaseDirectoryInfo { get; }
+
+        /// <summary>
+        /// 文件树的层级数量
+        /// </summary>
         public int HierarchyCount => _dictionary.Keys.Count;
 
         public FileSystemNode? this[int hierarchy, int index] =>
@@ -58,6 +65,10 @@ namespace FileTree.Library
             }
         }
 
+        /// <summary>
+        /// 获取指定节点的直接子节点
+        /// </summary>
+        /// <param name="systemNode"></param>
         public ReadOnlyCollection<FileSystemNode>? GetChildren(
             FileSystemNode systemNode)
         {
@@ -70,7 +81,13 @@ namespace FileTree.Library
                     default;
         }
 
-        public ReadOnlyCollection<FileSystemNode> RemoveNode(
+        /// <summary>
+        /// 删除指定的节点
+        /// </summary>
+        /// <param name="nodes"></param>
+        /// <param name="token"></param>
+        /// <remarks>如果删除的节点是文件夹节点,则该节点的所有子节点均会被移除</remarks>
+        public ReadOnlyCollection<FileSystemNode> RemoveNodes(
             IEnumerable<FileSystemNode> nodes,
             CancellationToken token = default)
         {
@@ -79,34 +96,34 @@ namespace FileTree.Library
                 switch (node.Info)
                 {
                     case DirectoryInfo:
-                        {
-                            List<Node>? children = GetNodeAllChildrenAndSelf(node);
-                            if (children != null)
-                                foreach (Node child in children)
-                                {
-                                    _ = child.Parent?.Children.Remove(child);
-                                    _dictionary[child.Hierarchy]![child.Index] = default;
-                                    buff.Add(child.GetFileNode(this));
-                                }
-                        }
+                    {
+                        List<Node>? children = GetNodeAllChildrenAndSelf(node);
+                        if (children != null)
+                            foreach (Node child in children)
+                            {
+                                _ = child.Parent?.Children.Remove(child);
+                                _dictionary[child.Hierarchy]![child.Index] = default;
+                                buff.Add(child.GetFileNode(this));
+                            }
+                    }
                         break;
                     case FileInfo:
+                    {
+                        int hierarchy = node.Hierarchy;
+                        int index = node.Index;
+                        FileSystemNode? fileNode = this[hierarchy, index];
+                        if (fileNode != null)
                         {
-                            int hierarchy = node.Hierarchy;
-                            int index = node.Index;
-                            FileSystemNode? fileNode = this[hierarchy, index];
-                            if (fileNode != null)
+                            Node item = _dictionary[hierarchy]![index] ??
+                                throw new InvalidOperationException();
+                            if (item.Info == node.Info)
                             {
-                                Node item = _dictionary[hierarchy]![index] ??
-                                    throw new InvalidOperationException();
-                                if (item.Info == node.Info)
-                                {
-                                    _ = item.Parent?.Children.Remove(item);
-                                    _dictionary[hierarchy]![index] = default;
-                                    buff.Add(fileNode);
-                                }
+                                _ = item.Parent?.Children.Remove(item);
+                                _dictionary[hierarchy]![index] = default;
+                                buff.Add(fileNode);
                             }
                         }
+                    }
                         break;
                 }
 
@@ -114,6 +131,7 @@ namespace FileTree.Library
             UpdateNodeIndex(token);
             return buff.AsReadOnly();
         }
+
         public override string ToString()
         {
             var stringBuilder = new StringBuilder();
@@ -137,6 +155,7 @@ namespace FileTree.Library
 
             return stringBuilder.ToString();
         }
+
         private Node? GetNode(int hierarchy, int index)
         {
             if (hierarchy < 0) throw new ArgumentOutOfRangeException(nameof(hierarchy));
@@ -144,6 +163,7 @@ namespace FileTree.Library
             List<Node?>? nodes = GetNodes(hierarchy);
             return nodes != null && index < nodes.Count ? nodes[index] : default;
         }
+
         private List<Node>? GetNodeAllChildrenAndSelf(FileSystemNode fileSystemNode)
         {
             if (fileSystemNode.Info is DirectoryInfo)
@@ -174,6 +194,7 @@ namespace FileTree.Library
 
             return default;
         }
+
         private List<Node?>? GetNodes(int hierarchy)
         {
             return _dictionary.TryGetValue(hierarchy, out List<Node?>? list) ?

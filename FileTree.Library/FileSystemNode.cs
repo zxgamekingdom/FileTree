@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
-
 using System;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -35,7 +34,9 @@ namespace FileTree.Library
             Hierarchy = hierarchy;
             Index = index;
         }
+
         public ReadOnlyCollection<FileSystemNode>? Children => Tree?.GetChildren(this);
+
         public string FullName =>
             Info switch
             {
@@ -43,11 +44,24 @@ namespace FileTree.Library
                 DirectoryInfo directoryInfo => directoryInfo.FullName,
                 _ => throw new ArgumentOutOfRangeException()
             };
+
+        /// <summary>
+        /// 节点在文件树中的层级
+        /// </summary>
+        /// <remarks>从零开始计数</remarks>
         public int Hierarchy { get; }
+
+        /// <summary>
+        /// 节点在文件树中对应层级的索引
+        /// </summary>
+        /// <remarks>从零开始计数</remarks>
         public int Index { get; }
+
         [JsonIgnore]
         public object Info { get; }
+
         public bool IsExistsUnauthorizedAccessChildren { get; }
+
         public string Name =>
             Info switch
             {
@@ -59,6 +73,9 @@ namespace FileTree.Library
         [JsonIgnore]
         public FileSystemNode? Parent { get; }
 
+        /// <summary>
+        /// 节点所在的文件树
+        /// </summary>
         [JsonIgnore]
         public FileSystemTree? Tree { get; }
 
