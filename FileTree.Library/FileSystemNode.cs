@@ -6,7 +6,7 @@ using System.IO;
 
 namespace FileTree.Library
 {
-    public class FileSystemNode
+    public record FileSystemNode
     {
         public FileSystemNode(object info,
             bool isExistsUnauthorizedAccessChildren,

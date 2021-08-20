@@ -73,14 +73,12 @@ namespace FileTree.Library
                 case null:
                     return default;
                 default:
-                {
                     while (buff.Parent is not null)
                     {
                         buff = buff.Parent;
                     }
 
                     return buff;
-                }
             }
         }
 
@@ -98,7 +96,6 @@ namespace FileTree.Library
                 case null:
                     return default;
                 default:
-                {
                     var nodes = new List<FileSystemNode>();
                     while (buff.Parent is not null)
                     {
@@ -108,7 +105,6 @@ namespace FileTree.Library
 
                     nodes.Add(buff);
                     return nodes;
-                }
             }
         }
     }
