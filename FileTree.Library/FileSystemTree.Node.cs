@@ -8,7 +8,10 @@ namespace FileTree.Library
     {
         private class Node
         {
-            public Node(object info, Node? parent = default, int hierarchy = 0)
+            public Node(object info,
+                FileSystemTree tree,
+                Node? parent = default,
+                int hierarchy = 0)
             {
                 if (hierarchy < 0)
                     throw new ArgumentOutOfRangeException(nameof(hierarchy));
@@ -17,32 +20,25 @@ namespace FileTree.Library
                 Type type = info.GetType();
                 if ((type == typeof(DirectoryInfo) ||
                     type == typeof(FileInfo)) is false)
+                {
                     throw new ArgumentException($@"n{nameof(info)}的类型必须是{
                         typeof(DirectoryInfo)}或者{typeof(FileInfo)}");
+                }
+
                 Info = info ?? throw new ArgumentNullException(nameof(info));
+                Tree = tree;
                 Parent = parent;
                 Hierarchy = hierarchy;
             }
+
             public List<Node> Children { get; } = new();
-            public string FullName =>
-                Info switch
-                {
-                    FileInfo fileInfo => fileInfo.FullName,
-                    DirectoryInfo directoryInfo => directoryInfo.FullName,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            public int Hierarchy { get; }
-            public int Index { get; set; }
+
+            public int? Hierarchy { get; private set; }
+            public int? Index { get; set; }
             public object Info { get; }
             public bool IsExistsUnauthorizedAccessChildren { get; set; }
-            public string Name =>
-                Info switch
-                {
-                    FileInfo fileInfo => fileInfo.Name,
-                    DirectoryInfo directoryInfo => directoryInfo.Name,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-            public Node? Parent { get; }
+            public Node? Parent { get; private set; }
+
             public FileSystemNodeType Type =>
                 Info switch
                 {
@@ -50,14 +46,25 @@ namespace FileTree.Library
                     FileInfo => FileSystemNodeType.FileInfo,
                     _ => throw new ArgumentOutOfRangeException()
                 };
-            public FileSystemNode GetFileNode(FileSystemTree systemTree)
+
+            public FileSystemNode GetFileNode()
             {
                 return new FileSystemNode(Info,
                     IsExistsUnauthorizedAccessChildren,
-                    systemTree,
-                    Parent?.GetFileNode(systemTree),
+                    Tree,
+                    Parent?.GetFileNode(),
                     Hierarchy,
                     Index);
+            }
+
+            public FileSystemTree? Tree { get; private set; }
+
+            public void RemoveTreeInfo()
+            {
+                Tree = default;
+                Parent = default;
+                Hierarchy = default;
+                Index = default;
             }
         }
     }

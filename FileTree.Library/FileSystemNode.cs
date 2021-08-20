@@ -12,8 +12,8 @@ namespace FileTree.Library
             bool isExistsUnauthorizedAccessChildren,
             FileSystemTree? tree = null,
             FileSystemNode? parent = default,
-            int hierarchy = 0,
-            int index = 0)
+            int? hierarchy = 0,
+            int? index = 0)
         {
             switch (hierarchy)
             {
@@ -25,8 +25,11 @@ namespace FileTree.Library
 
             Type type = info.GetType();
             if ((type == typeof(DirectoryInfo) || type == typeof(FileInfo)) is false)
+            {
                 throw new ArgumentException($@"n{nameof(info)}的类型必须是{
                     typeof(DirectoryInfo)}或者{typeof(FileInfo)}");
+            }
+
             Tree = tree;
             Info = info ?? throw new ArgumentNullException(nameof(info));
             IsExistsUnauthorizedAccessChildren = isExistsUnauthorizedAccessChildren;
@@ -49,13 +52,13 @@ namespace FileTree.Library
         /// 节点在文件树中的层级
         /// </summary>
         /// <remarks>从零开始计数</remarks>
-        public int Hierarchy { get; }
+        public int? Hierarchy { get;  }
 
         /// <summary>
         /// 节点在文件树中对应层级的索引
         /// </summary>
         /// <remarks>从零开始计数</remarks>
-        public int Index { get; }
+        public int? Index { get;  }
 
         [JsonIgnore]
         public object Info { get; }
@@ -71,13 +74,13 @@ namespace FileTree.Library
             };
 
         [JsonIgnore]
-        public FileSystemNode? Parent { get; }
+        public FileSystemNode? Parent { get;  }
 
         /// <summary>
         /// 节点所在的文件树
         /// </summary>
         [JsonIgnore]
-        public FileSystemTree? Tree { get; }
+        public FileSystemTree? Tree { get;}
 
         [JsonConverter(typeof(StringEnumConverter))]
         public FileSystemNodeType Type =>
