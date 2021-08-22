@@ -32,6 +32,12 @@ namespace FileTree.Library
             return list.AsReadOnly();
         }
 
+        public static bool IsRoot(this FileSystemNode node)
+        {
+            if (node == null) throw new ArgumentNullException(nameof(node));
+            return node.Tree?[0, 0] == node;
+        }
+
         ///  <summary>
         ///  获取父节点
         ///  </summary>
@@ -87,7 +93,8 @@ namespace FileTree.Library
         /// </summary>
         /// <param name="node"></param>
         /// <exception cref="ArgumentNullException"><paramref name="node"/> is <c>null</c>.</exception>
-        public static List<FileSystemNode>? GetAllParent(this FileSystemNode node)
+        public static ReadOnlyCollection<FileSystemNode>? GetAllParent(
+            this FileSystemNode node)
         {
             if (node == null) throw new ArgumentNullException(nameof(node));
             FileSystemNode? buff = node.Parent;
@@ -104,7 +111,7 @@ namespace FileTree.Library
                     }
 
                     nodes.Add(buff);
-                    return nodes;
+                    return nodes.AsReadOnly();
             }
         }
     }

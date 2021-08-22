@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;
@@ -7,22 +8,21 @@ using static Xunit.Assert;
 
 namespace FileTree.Library.TestProject
 {
-    public partial class FileSystemTreeUnitTest : IClassFixture<
-        FileSystemTreeUnitTest.FileSystemTreeUnitTestClassFixture>
+    [Collection(nameof(FileSystemTreeUnitTestCollectionFixture))]
+    public class FileSystemTreeUnitTest
     {
-        private readonly FileSystemTreeUnitTestClassFixture _fixture;
-        private readonly ReadOnlyCollection<DirectoryInfo> _directoryInfos;
-        private readonly ReadOnlyCollection<FileInfo> _fileInfos;
+        private readonly
+            FileSystemTreeUnitTestCollectionFixture.FileSystemTreeUnitTestClassFixture
+            _fixture;
+
         private readonly FileSystemTree _tree;
 
-        public FileSystemTreeUnitTest(FileSystemTreeUnitTestClassFixture fixture)
+        public FileSystemTreeUnitTest(
+            FileSystemTreeUnitTestCollectionFixture.FileSystemTreeUnitTestClassFixture
+                fixture)
         {
             _fixture = fixture;
-            (ReadOnlyCollection<DirectoryInfo> directoryInfos,
-                ReadOnlyCollection<FileInfo> fileInfos) = _fixture.GetInfos();
-            _directoryInfos = directoryInfos;
-            _fileInfos = fileInfos;
-            _tree = CreateTree();
+            _tree = fixture.CreateTree();
         }
 
         [Fact]
@@ -34,12 +34,6 @@ namespace FileTree.Library.TestProject
             Equal(121, all.Count);
             Equal(81, fileCount);
             Equal(40, dirCount);
-        }
-
-        [Fact]
-        public void Test_HierarchyCount()
-        {
-            Equal(5, _tree.HierarchyCount);
         }
 
         [Theory]
@@ -55,7 +49,66 @@ namespace FileTree.Library.TestProject
             NotNull(node.Parent);
             Equal(4, node.Hierarchy);
             Equal(FileSystemNodeType.FileInfo, node.Type);
-            Equal(node.GetTopParent(), _tree[0, 0]);
+        }
+
+        [Theory]
+        [InlineData(-1, default, typeof(ArgumentOutOfRangeException))]
+        [InlineData(0, -1, typeof(ArgumentOutOfRangeException))]
+        [InlineData(1, 1, typeof(ArgumentNullException))]
+        public void Test_FileSystemNodeCtor1(int? hierarchy, int? index, Type exception)
+        {
+            _ = Throws(exception,
+                () => new FileSystemNode(new DirectoryInfo(_fixture.BaseDirPath),
+                    false,
+                    default,
+                    default,
+                    hierarchy,
+                    index));
+        }
+
+        [Fact]
+        public void Test_FileSystemNodeCtor2()
+        {
+            _ = Throws<ArgumentException>(() => new FileSystemNode("1", false));
+        }
+
+        [Fact]
+        public void Test_HierarchyCount()
+        {
+            Equal(5, _tree.HierarchyCount);
+        }
+
+        [Fact]
+        public void Test_Index()
+        {
+            {
+                ReadOnlyCollection<FileSystemNode> collection =
+                    _tree[0] ?? throw new InvalidOperationException();
+                _ = Single(collection);
+                FileSystemNode node = collection[0];
+                True(node.Hierarchy == 0 && node.Index == 0);
+                True(_tree[0, 0] == node);
+            }
+            {
+                ReadOnlyCollection<FileSystemNode> collection =
+                    _tree[1] ?? throw new InvalidOperationException();
+                Equal(3, collection.Count);
+            }
+        }
+
+        [Fact]
+        public void Test_RemoveAllFileNodes()
+        {
+            ReadOnlyCollection<FileSystemNode> removeNodes =
+                _tree.RemoveNodes(_tree.All.Where(node => node.Info is FileInfo));
+            True(removeNodes.Count == 81);
+            True(removeNodes.All(node => node.Parent is null));
+            True(removeNodes.All(node => node.Index is null));
+            True(removeNodes.All(node => node.Hierarchy is null));
+            True(removeNodes.All(node => node.Tree is null));
+            True(removeNodes.All(node => node.Type is FileSystemNodeType.FileInfo));
+            True(_tree.All.Count == 40);
+            True(_tree.All.All(node => node.Info is DirectoryInfo));
         }
 
         [Fact]
@@ -71,20 +124,12 @@ namespace FileTree.Library.TestProject
         }
 
         [Fact]
-        public void Test_RemoveAllFileNodes()
+        public void Test_RemoveNotThisNodes()
         {
-            ReadOnlyCollection<FileSystemNode> removeNodes =
-                _tree.RemoveNodes(_tree.All.Where(node => node.Info is FileInfo));
-            Equal(81, removeNodes.Count);
-            Equal(true, removeNodes.All(node => node.Parent is null));
-            Equal(true, removeNodes.All(node => node.Index is null));
-            Equal(true, removeNodes.All(node => node.Hierarchy is null));
-            Equal(true, removeNodes.All(node => node.Tree is null));
-            Equal(true, removeNodes.All(node => node.Info is not null));
-            Equal(true,
-                removeNodes.All(node => node.Type is FileSystemNodeType.FileInfo));
-            Equal(40, _tree.All.Count);
-            Equal(true, _tree.All.All(node => node.Info is DirectoryInfo));
+            _ = Throws<InvalidOperationException>(() => _tree.RemoveNodes(new[]
+            {
+                new FileSystemNode(new DirectoryInfo(_fixture.BaseDirPath), false)
+            }));
         }
 
         [Fact]
@@ -95,16 +140,14 @@ namespace FileTree.Library.TestProject
                 {
                     _tree.All.First(node => node.Info is FileInfo)
                 });
-            Equal(1, removeNodes.Count);
-            Equal(true, removeNodes.All(node => node.Parent is null));
-            Equal(true, removeNodes.All(node => node.Index is null));
-            Equal(true, removeNodes.All(node => node.Hierarchy is null));
-            Equal(true, removeNodes.All(node => node.Tree is null));
-            Equal(true, removeNodes.All(node => node.Info is not null));
-            Equal(true,
-                removeNodes.All(node => node.Type is FileSystemNodeType.FileInfo));
+            _ = Single(removeNodes);
+            True(removeNodes.All(node => node.Parent is null));
+            True(removeNodes.All(node => node.Index is null));
+            True(removeNodes.All(node => node.Hierarchy is null));
+            True(removeNodes.All(node => node.Tree is null));
+            True(removeNodes.All(node => node.Type is FileSystemNodeType.FileInfo));
             Equal(120, _tree.All.Count);
-            Equal(true, _tree.All.All(node => node.Name != removeNodes[0].Name));
+            True(_tree.All.All(node => node.Name != removeNodes[0].Name));
         }
 
         [Fact]
@@ -121,22 +164,7 @@ namespace FileTree.Library.TestProject
             Null(node.Parent);
             Equal(0, node.Hierarchy);
             Equal(0, node.Index);
-            Equal(false, node.IsExistsUnauthorizedAccessChildren);
-        }
-
-        private FileSystemTree CreateTree()
-        {
-            var tree = new FileSystemTree(new DirectoryInfo(_fixture.BaseDirPath));
-            foreach (FileSystemNode fileSystemNode in tree.All.Where(node =>
-            {
-                return node.Info is FileInfo fileInfo &&
-                    _fileInfos.Any(info => info.FullName == fileInfo.FullName) is false;
-            }))
-            {
-                ((FileInfo)fileSystemNode.Info).Delete();
-            }
-
-            return tree;
+            False(node.IsExistsUnauthorizedAccessChildren);
         }
     }
 }

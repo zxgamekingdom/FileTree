@@ -2,10 +2,13 @@
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
+using Xunit;
 
 namespace FileTree.Library.TestProject
 {
-    public partial class FileSystemTreeUnitTest
+    [CollectionDefinition(nameof(FileSystemTreeUnitTestCollectionFixture))]
+    public class FileSystemTreeUnitTestCollectionFixture : ICollectionFixture<
+        FileSystemTreeUnitTestCollectionFixture.FileSystemTreeUnitTestClassFixture>
     {
         public class FileSystemTreeUnitTestClassFixture
         {
@@ -13,6 +16,28 @@ namespace FileTree.Library.TestProject
             private List<FileInfo> _fileInfos = null!;
 
             public string BaseDirPath { get; private set; } = null!;
+
+            public FileSystemTree CreateTree()
+            {
+                var tree = new FileSystemTree(new DirectoryInfo(BaseDirPath));
+                foreach (FileSystemNode fileSystemNode in tree.All.Where(node =>
+                    node.Info is FileInfo fileInfo &&
+                    _fileInfos.Any(info =>
+                        info.FullName == fileInfo.FullName) is false))
+                {
+                    ((FileInfo)fileSystemNode.Info).Delete();
+                }
+
+                foreach (FileSystemNode fileSystemNode in tree.All.Where(node =>
+                    node.Info is DirectoryInfo directoryInfo &&
+                    _directoryInfos.Any(info =>
+                        info.FullName == directoryInfo.FullName) is false))
+                {
+                    ((DirectoryInfo)fileSystemNode.Info).Delete(true);
+                }
+
+                return tree;
+            }
 
             public (ReadOnlyCollection<DirectoryInfo> directoryInfos,
                 ReadOnlyCollection<FileInfo> fileInfos) GetInfos()
@@ -48,6 +73,7 @@ namespace FileTree.Library.TestProject
                     $"{nameof(FileSystemTree)}UnitTest");
                 // _ = Process.Start("explorer", BaseDirPath);
                 var dir0 = new DirectoryInfo(BaseDirPath);
+                _directoryInfos.Add(dir0);
                 for (int i = 0; i < 3; i++)
                 {
                     var dir1 =

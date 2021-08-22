@@ -96,8 +96,7 @@ namespace FileTree.Library
             CancellationToken token = default)
         {
             List<FileSystemNode> buff = new();
-            IEnumerable<FileSystemNode> buffNodes =
-                nodes as FileSystemNode[] ?? nodes.ToArray();
+            FileSystemNode[] buffNodes = nodes as FileSystemNode[] ?? nodes.ToArray();
             if (buffNodes.Any(node => node.Tree != this))
                 throw new InvalidOperationException("不能移除非本树的节点");
             foreach (FileSystemNode node in buffNodes)
@@ -274,12 +273,13 @@ namespace FileTree.Library
                 }
             }
 
-            foreach ((int key, List<Node?>? value) in _dictionary)
+            foreach (int i in (
+                from pair in _dictionary
+                let v = pair.Value
+                where v == null || v.Count == 0
+                select pair.Key).ToArray())
             {
-                if (value is null || value.Count == 0)
-                {
-                    _ = _dictionary.Remove(key);
-                }
+                _ = _dictionary.Remove(i);
             }
         }
 
