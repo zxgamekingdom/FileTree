@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using Xunit;
-using static FileTree.Library.TestProject.FileSystemTreeUnitTestCollectionFixture;
 using static Xunit.Assert;
 
 namespace FileTree.Library.TestProject
@@ -12,10 +11,15 @@ namespace FileTree.Library.TestProject
     [Collection(nameof(FileSystemTreeUnitTestCollectionFixture))]
     public class FileSystemNodeExtensionsTest
     {
-        private FileSystemTree _tree;
-        private FileSystemTreeUnitTestClassFixture _fixture;
+        private readonly FileSystemTree _tree;
 
-        public FileSystemNodeExtensionsTest(FileSystemTreeUnitTestClassFixture fixture)
+        private readonly
+            FileSystemTreeUnitTestCollectionFixture.FileSystemTreeUnitTestClassFixture
+            _fixture;
+
+        public FileSystemNodeExtensionsTest(
+            FileSystemTreeUnitTestCollectionFixture.FileSystemTreeUnitTestClassFixture
+                fixture)
         {
             _fixture = fixture;
             _tree = fixture.CreateTree();
@@ -25,7 +29,7 @@ namespace FileTree.Library.TestProject
         public void Test_GetAllChildren()
         {
             ReadOnlyCollection<FileSystemNode>? allChildren =
-                (_tree[0, 0] ?? throw new InvalidOperationException()).GetAllChildren();
+                _tree.Root!.GetAllChildren();
             ReadOnlyCollection<FileSystemNode> treeAll = _tree.All;
             Equal(treeAll.Count - 1, allChildren!.Count);
             FileSystemNode[] union = allChildren.Union(treeAll).ToArray();
@@ -37,7 +41,7 @@ namespace FileTree.Library.TestProject
         [Fact]
         public void Test_GetParent()
         {
-            FileSystemNode? root = _tree[0, 0];
+            FileSystemNode? root = _tree.Root;
             FileSystemNode node = root!.Children![0];
             Equal(node.GetParent(0), node);
             Equal(node.GetParent(1), root);
@@ -50,8 +54,8 @@ namespace FileTree.Library.TestProject
         {
             {
                 List<FileSystemNode> all = _tree.All.ToList();
-                _ = all.Remove(_tree[0, 0]!);
-                FileSystemNode root = _tree[0, 0]!;
+                _ = all.Remove(_tree.Root!);
+                FileSystemNode root = _tree.Root!;
                 foreach (FileSystemNode node in all)
                 {
                     Equal(node.GetTopParent(), root);
@@ -63,7 +67,7 @@ namespace FileTree.Library.TestProject
                 Null(node.GetTopParent());
             }
             {
-                FileSystemNode node = _tree[0, 0]!;
+                FileSystemNode node = _tree.Root!;
                 Null(node.GetTopParent());
             }
         }
@@ -81,15 +85,15 @@ namespace FileTree.Library.TestProject
             True(allParent.Exists(node => node.Name == "FileSystemTreeUnitTest.0.1.2"));
             False(allParent.Exists(node =>
                 node.Name == "FileSystemTreeUnitTest.0.1.2.2.txt"));
-            Null(_tree[0, 0]!.GetAllParent());
+            Null(_tree.Root!.GetAllParent());
         }
 
         [Fact]
         public void Test_IsRoot()
         {
             List<FileSystemNode> list = _tree.All.ToList();
-            _ = list.Remove(_tree[0, 0]!);
-            True(_tree[0, 0]!.IsRoot());
+            _ = list.Remove(_tree.Root!);
+            True(_tree.Root!.IsRoot());
             foreach (FileSystemNode fileSystemNode in list)
                 False(fileSystemNode.IsRoot());
         }
