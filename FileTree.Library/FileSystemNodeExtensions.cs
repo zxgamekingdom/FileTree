@@ -34,8 +34,9 @@ namespace FileTree.Library
 
         public static bool IsRoot(this FileSystemNode node)
         {
-            if (node == null) throw new ArgumentNullException(nameof(node));
-            return node.Tree?[0, 0] == node;
+            return node == null ?
+                throw new ArgumentNullException(nameof(node)) :
+                node.Tree?.Root == node;
         }
 
         ///  <summary>

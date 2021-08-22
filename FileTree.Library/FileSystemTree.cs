@@ -42,6 +42,7 @@ namespace FileTree.Library
             }
         }
 
+        public FileSystemNode? Root => this[0, 0];
         public DirectoryInfo BaseDirectoryInfo { get; }
 
         /// <summary>
